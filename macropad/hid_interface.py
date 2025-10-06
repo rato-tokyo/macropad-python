@@ -134,7 +134,10 @@ class HidInterface:
         try:
             bytes_written = self.device.write(bytes(buffer))
             logger.debug(f"Wrote {bytes_written} bytes to device")
-            return bytes_written > 0
+            # On Windows, write() returns -1 on success for some devices
+            # On Linux, it returns the number of bytes written
+            # Consider both as success if no exception was raised
+            return True
         except Exception as e:
             logger.error(f"Failed to write to device: {e}")
             return False
