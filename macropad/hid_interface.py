@@ -19,9 +19,9 @@ class DeviceConfig:
 
 # Default configurations for known devices
 KNOWN_DEVICES = [
-    DeviceConfig(0x1189, 0x8860, b"mi_01", 1),  # 4489:34880
-    DeviceConfig(0x1189, 0x8890, b"mi_01", 0),  # 4489:34960 - 3 buttons 1 knob
-    DeviceConfig(0x1189, 0x8830, b"mi_00", 1),  # 4489:34864
+    DeviceConfig(0x1189, 0x8860, "MI_01", 1),  # 4489:34880
+    DeviceConfig(0x1189, 0x8890, "MI_01", 0),  # 4489:34960 - 3 buttons 1 knob
+    DeviceConfig(0x1189, 0x8830, "MI_00", 1),  # 4489:34864
 ]
 
 
@@ -62,16 +62,20 @@ class HidInterface:
                 path = device_info['path']
 
                 # Check if path contains the required fragment
-                # path is bytes, convert fragment to match or vice versa
+                # Convert both to strings for comparison (case-insensitive)
                 try:
                     if isinstance(path, bytes):
                         path_str = path.decode('utf-8', errors='ignore')
-                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
                     else:
                         path_str = str(path)
-                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
 
-                    if fragment_str not in path_str:
+                    if isinstance(config.path_fragment, bytes):
+                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
+                    else:
+                        fragment_str = str(config.path_fragment)
+
+                    # Case-insensitive search for Windows/Linux compatibility
+                    if fragment_str.upper() not in path_str.upper():
                         continue
                 except Exception as e:
                     logger.debug(f"Path check failed: {e}")
@@ -152,16 +156,19 @@ class HidInterface:
             for device_info in hid.enumerate(config.vendor_id, config.product_id):
                 path = device_info['path']
 
-                # Check path fragment (cross-platform)
+                # Check path fragment (cross-platform, case-insensitive)
                 try:
                     if isinstance(path, bytes):
                         path_str = path.decode('utf-8', errors='ignore')
-                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
                     else:
                         path_str = str(path)
-                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
 
-                    if fragment_str not in path_str:
+                    if isinstance(config.path_fragment, bytes):
+                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
+                    else:
+                        fragment_str = str(config.path_fragment)
+
+                    if fragment_str.upper() not in path_str.upper():
                         continue
                 except:
                     continue
