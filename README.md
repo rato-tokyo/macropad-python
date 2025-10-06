@@ -27,7 +27,21 @@ Currently supports the **3-button 1-knob** macro keypad:
 
 Python 3.7+ and pip are required.
 
-On Linux, you may need to install libhidapi:
+### Platform-Specific Setup
+
+#### Windows
+
+No additional setup required! Just install Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+**Note:** On Windows, you may need to run the command prompt as Administrator for the first time to access HID devices.
+
+#### Linux
+
+Install libhidapi library:
 
 ```bash
 # Ubuntu/Debian
@@ -40,13 +54,13 @@ sudo dnf install hidapi
 sudo pacman -S hidapi
 ```
 
-### Install Dependencies
+Then install Python dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Linux Permissions
+#### Linux Permissions
 
 On Linux, you need udev rules to access HID devices without root:
 
@@ -209,16 +223,17 @@ Based on the protocol reverse-engineering work from [rOzzy1987/MacroPad](https:/
 ## Troubleshooting
 
 ### Device not found
-- Ensure device is plugged in
-- Check udev rules (Linux)
-- Try running with `sudo` (not recommended, fix udev rules instead)
+- **Windows:** Ensure device is plugged in. Try running Command Prompt as Administrator.
+- **Linux:** Ensure device is plugged in and check udev rules (see Installation section)
 
-### Permission denied (Linux)
+### Permission denied (Linux only)
 - Set up udev rules (see Installation section)
 - Reconnect device after adding rules
 - Check with `ls -l /dev/hidraw*` to verify permissions
+- If still failing, try running with `sudo` temporarily (not recommended for regular use)
 
 ### Configuration not working
-- Run with `-v` flag to see detailed logs
-- Verify your device is the 3-button 1-knob type
+- Run with `-v` flag to see detailed logs: `python cli.py -v list`
+- Verify your device is the 3-button 1-knob type (VID:PID = 1189:8890)
 - Try disconnecting and reconnecting the device
+- **Windows:** Some antivirus software may block HID access - temporarily disable to test

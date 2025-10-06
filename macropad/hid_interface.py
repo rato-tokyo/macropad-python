@@ -62,22 +62,36 @@ class HidInterface:
                 path = device_info['path']
 
                 # Check if path contains the required fragment
-                if config.path_fragment in path:
-                    try:
-                        self.device = hid.device()
-                        self.device.open_path(path)
-                        self.config = config
+                # path is bytes, convert fragment to match or vice versa
+                try:
+                    if isinstance(path, bytes):
+                        path_str = path.decode('utf-8', errors='ignore')
+                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
+                    else:
+                        path_str = str(path)
+                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
 
-                        manufacturer = self.device.get_manufacturer_string()
-                        product = self.device.get_product_string()
-                        logger.info(f"Connected to: {manufacturer} {product}")
-                        logger.info(f"VID:PID = {config.vendor_id:04X}:{config.product_id:04X}")
-                        logger.info(f"Protocol version: {config.protocol_version}")
-
-                        return True
-                    except Exception as e:
-                        logger.error(f"Failed to open device: {e}")
+                    if fragment_str not in path_str:
                         continue
+                except Exception as e:
+                    logger.debug(f"Path check failed: {e}")
+                    continue
+
+                try:
+                    self.device = hid.device()
+                    self.device.open_path(path)
+                    self.config = config
+
+                    manufacturer = self.device.get_manufacturer_string()
+                    product = self.device.get_product_string()
+                    logger.info(f"Connected to: {manufacturer} {product}")
+                    logger.info(f"VID:PID = {config.vendor_id:04X}:{config.product_id:04X}")
+                    logger.info(f"Protocol version: {config.protocol_version}")
+
+                    return True
+                except Exception as e:
+                    logger.error(f"Failed to open device: {e}")
+                    continue
 
         logger.error("No compatible MacroPad device found")
         return False
@@ -136,14 +150,29 @@ class HidInterface:
 
         for config in KNOWN_DEVICES:
             for device_info in hid.enumerate(config.vendor_id, config.product_id):
-                if config.path_fragment in device_info['path']:
-                    found_devices.append({
-                        'vendor_id': device_info['vendor_id'],
-                        'product_id': device_info['product_id'],
-                        'manufacturer': device_info['manufacturer_string'],
-                        'product': device_info['product_string'],
-                        'path': device_info['path'],
-                        'protocol': config.protocol_version
-                    })
+                path = device_info['path']
+
+                # Check path fragment (cross-platform)
+                try:
+                    if isinstance(path, bytes):
+                        path_str = path.decode('utf-8', errors='ignore')
+                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
+                    else:
+                        path_str = str(path)
+                        fragment_str = config.path_fragment.decode('utf-8', errors='ignore')
+
+                    if fragment_str not in path_str:
+                        continue
+                except:
+                    continue
+
+                found_devices.append({
+                    'vendor_id': device_info['vendor_id'],
+                    'product_id': device_info['product_id'],
+                    'manufacturer': device_info['manufacturer_string'],
+                    'product': device_info['product_string'],
+                    'path': device_info['path'],
+                    'protocol': config.protocol_version
+                })
 
         return found_devices
